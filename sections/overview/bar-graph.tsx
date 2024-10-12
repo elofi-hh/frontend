@@ -81,7 +81,7 @@ export function BarGraph() {
   const [totalUpload, setTotalUpload] = useState(0);
   const [totalTotal, setTotalTotal] = useState(0);
   const [deviceCount, setDeviceCount] = useState(0);
-  const [chartData, setChartData] = useState(0);
+  // const [chartData, setChartData] = useState(0);
 
   useEffect(() => {
     const updateDevices = async () => {

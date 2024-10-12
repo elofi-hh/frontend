@@ -1,9 +1,11 @@
+'use client';
+import React, { useState, useEffect } from 'react';
 import { AreaGraph } from '../area-graph';
 import { BarGraph } from '../bar-graph';
 import { PieGraph } from '../pie-graph';
 import { CalendarDateRangePicker } from '@/components/date-range-picker';
 import PageContainer from '@/components/layout/page-container';
-import { DeviceList, deviceCount } from '../device-list';
+import { DeviceList } from '../device-list';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -14,7 +16,69 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+interface Device {
+  id: number;
+  download: string;
+  upload: string;
+  user: string;
+  elo: string;
+}
+
+const endpoint = 'https://your-api-endpoint.com/devices'; // Replace with your actual endpoint
+
+const fetchDevices = async (): Promise<Device[]> => {
+  const response = await fetch(endpoint);
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+  return response.json();
+};
+
 export default function OverViewPage() {
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [averageElo, setAverageElo] = useState(0);
+  const [totalDownload, setTotalDownload] = useState(0);
+  const [totalUpload, setTotalUpload] = useState(0);
+  const [totalTotal, setTotalTotal] = useState(0);
+  const [deviceCount, setDeviceCount] = useState(0);
+
+  useEffect(() => {
+    const updateDevices = async () => {
+      try {
+        const newDevices = await fetchDevices();
+        setDevices(newDevices);
+
+        const totalElo = newDevices.reduce(
+          (sum, device) => sum + Number(device.elo.replace(/,/g, '')),
+          0
+        );
+        setAverageElo(totalElo / newDevices.length);
+
+        const totalDownload = newDevices.reduce(
+          (sum, device) => sum + Number(device.download.replace(/,/g, '')),
+          0
+        );
+        setTotalDownload(totalDownload);
+
+        const totalUpload = newDevices.reduce(
+          (sum, device) => sum + Number(device.upload.replace(/,/g, '')),
+          0
+        );
+        setTotalUpload(totalUpload);
+
+        setTotalTotal(totalDownload + totalUpload);
+        setDeviceCount(newDevices.length);
+      } catch (error) {
+        console.error('Failed to fetch devices:', error);
+      }
+    };
+
+    updateDevices();
+    const interval = setInterval(updateDevices, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <PageContainer scrollable>
       <div className="space-y-2">
@@ -23,16 +87,16 @@ export default function OverViewPage() {
             Hi, Welcome back 👋
           </h2>
           <div className="hidden items-center space-x-2 md:flex">
-          <span className="font-whyfi text-2xl">WhyFi Admin Dashboard</span>
+            <span className="font-whyfi text-2xl">WhyFi Admin Dashboard</span>
           </div>
         </div>
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
+          {/* <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="analytics">
               Analytics
             </TabsTrigger>
-          </TabsList>
+          </TabsList> */}
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -42,19 +106,21 @@ export default function OverViewPage() {
                   </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
                     fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
                     stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
+                    className="size-6 text-muted-foreground"
                   >
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
+                    />
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">45,231 bytes</div>
+                  <div className="text-2xl font-bold">{totalTotal} bytes</div>
                   <p className="text-xs text-muted-foreground">
                     +X% from last month
                   </p>
@@ -67,72 +133,77 @@ export default function OverViewPage() {
                   </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
                     fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
                     stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
+                    className="size-6 text-muted-foreground"
                   >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0"
+                    />
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">2350</div>
+                  <div className="text-2xl font-bold">{averageElo}</div>
                   <p className="text-xs text-muted-foreground">
-                    +40 from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Sales</CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <rect width="20" height="14" x="2" y="5" rx="2" />
-                    <path d="M2 10h20" />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">+12,234</div>
-                  <p className="text-xs text-muted-foreground">
-                    +19% from last month
+                    +X from last month
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Active Devices
+                    Download
                   </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
                     fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
                     stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
+                    className="size-6 text-muted-foreground"
                   >
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m9 12.75 3 3m0 0 3-3m-3 3v-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                    />
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">573</div>
+                  <div className="text-2xl font-bold">
+                    {totalDownload} Bytes
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +201 since last hour
+                    +X% from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Upload</CardTitle>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="size-6 text-muted-foreground"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m15 11.25-3-3m0 0-3 3m3-3v7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                    />
+                  </svg>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{totalUpload} Bytes</div>
+                  <p className="text-xs text-muted-foreground">
+                    +X% from last month
                   </p>
                 </CardContent>
               </Card>
@@ -145,11 +216,11 @@ export default function OverViewPage() {
                 <CardHeader>
                   <CardTitle>Device List</CardTitle>
                   <CardDescription>
-                    There are {deviceCount} devices currently connected.
+                    There are {deviceCount} device(s) currently connected.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <DeviceList deviceCount={deviceCount} />
+                  <DeviceList />
                 </CardContent>
               </Card>
               <div className="col-span-4">

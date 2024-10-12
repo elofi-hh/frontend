@@ -15,24 +15,31 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import axios from 'axios';
 
 interface Device {
   id: number;
-  download: string;
-  upload: string;
-  user: string;
+  interface: string;
+  mac: string;
+  ip: string;
+  data_in: number;
+  data_out: number;
+  data_total: number;
+  first_date: number;
+  last_date: number;
   elo: string;
 }
 
-const endpoint = 'http://192.168.2.1:8080'; // Replace with your actual endpoint
+const endpoint = 'http://192.168.2.1:8080/'; // Replace with your actual endpoint
 
-const fetchDevices = async (): Promise<Device[]> => {
-  const response = await fetch(endpoint, { mode: 'no-cors' });
-  if (!response.ok) {
+const fetchDevices = async (): Promise<Map<string, Device[]>> => {
+  try {
+    const response = await axios.get(endpoint);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching devices:', error);
     throw new Error('Network response was not ok');
   }
-
-  return response.json();
 };
 
 export default function OverViewPage() {
@@ -47,28 +54,42 @@ export default function OverViewPage() {
     const updateDevices = async () => {
       try {
         const newDevices = await fetchDevices();
-        setDevices(newDevices);
 
-        const totalElo = newDevices.reduce(
-          (sum, device) => sum + Number(device.elo.replace(/,/g, '')),
-          0
-        );
-        setAverageElo(totalElo / newDevices.length);
+        console.log('newDevices', newDevices);
 
-        const totalDownload = newDevices.reduce(
-          (sum, device) => sum + Number(device.download.replace(/,/g, '')),
-          0
-        );
+        const mostRecentDevices = newDevices.get(
+          (newDevices.size - 1).toString()
+        ); // Get the most recent array
+
+        if (!mostRecentDevices) {
+          return;
+        }
+
+        console.log(newDevices);
+        console.log(mostRecentDevices);
+        console.log(mostRecentDevices[0].mac);
+
+        setDevices(mostRecentDevices);
+
+        const { totalElo, totalDownload, totalUpload, deviceCount } =
+          mostRecentDevices.reduce(
+            (acc, device) => {
+              acc.totalElo += 1; // TODO: fix this
+              acc.totalDownload += Number(device.data_in);
+              acc.totalUpload += Number(device.data_out);
+              acc.deviceCount += 1;
+              return acc;
+            },
+            { totalElo: 0, totalDownload: 0, totalUpload: 0, deviceCount: 0 }
+          );
+
+        console.log('here', totalDownload);
+
+        setAverageElo(totalElo / deviceCount);
         setTotalDownload(totalDownload);
-
-        const totalUpload = newDevices.reduce(
-          (sum, device) => sum + Number(device.upload.replace(/,/g, '')),
-          0
-        );
         setTotalUpload(totalUpload);
-
         setTotalTotal(totalDownload + totalUpload);
-        setDeviceCount(newDevices.length);
+        setDeviceCount(deviceCount);
       } catch (error) {
         console.error('Failed to fetch devices:', error);
       }
@@ -88,7 +109,9 @@ export default function OverViewPage() {
             Hi, Welcome back 👋
           </h2>
           <div className="hidden items-center space-x-2 md:flex">
-            <span className="font-EloFi text-2xl">EloFi Admin Dashboard</span>
+            <span className="font-EloFi text-2xl">
+              🛜 EloFi Admin Dashboard
+            </span>
           </div>
         </div>
         <Tabs defaultValue="overview" className="space-y-4">

@@ -1,7 +1,46 @@
 'use client';
 
-import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+
+interface Device {
+  id: number;
+  interface: string;
+  mac: string;
+  ip: string;
+  data_in: number;
+  data_out: number;
+  data_total: number;
+  first_date: number;
+  last_date: number;
+  elo: string;
+}
+
+interface BarOnGraph {
+  id: number;
+  interface: string;
+  mac: string;
+  ip: string;
+  data_in: number;
+  data_out: number;
+  data_total: number;
+  first_date: number;
+  last_date: number;
+  elo: string;
+}
+
+const endpoint = 'http://192.168.2.1:8080/'; // Replace with your actual endpoint
+
+const fetchDevices = async (): Promise<[Device[]]> => {
+  try {
+    const response = await axios.get(endpoint);
+    return response.data;
+  } catch (error) {
+    // console.error('Error fetching devices:', error);
+    throw new Error('Network response was not ok');
+  }
+};
 
 import {
   Card,
@@ -19,99 +58,7 @@ import {
 
 export const description = 'An interactive bar chart';
 
-const chartData = [
-  { date: '2024-04-01', bytes: 222, mobile: 150 },
-  { date: '2024-04-02', bytes: 97, mobile: 180 },
-  { date: '2024-04-03', bytes: 167, mobile: 120 },
-  { date: '2024-04-04', bytes: 242, mobile: 260 },
-  { date: '2024-04-05', bytes: 373, mobile: 290 },
-  { date: '2024-04-06', bytes: 301, mobile: 340 },
-  { date: '2024-04-07', bytes: 245, mobile: 180 },
-  { date: '2024-04-08', bytes: 409, mobile: 320 },
-  { date: '2024-04-09', bytes: 59, mobile: 110 },
-  { date: '2024-04-10', bytes: 261, mobile: 190 },
-  { date: '2024-04-11', bytes: 327, mobile: 350 },
-  { date: '2024-04-12', bytes: 292, mobile: 210 },
-  { date: '2024-04-13', bytes: 342, mobile: 380 },
-  { date: '2024-04-14', bytes: 137, mobile: 220 },
-  { date: '2024-04-15', bytes: 120, mobile: 170 },
-  { date: '2024-04-16', bytes: 138, mobile: 190 },
-  { date: '2024-04-17', bytes: 446, mobile: 360 },
-  { date: '2024-04-18', bytes: 364, mobile: 410 },
-  { date: '2024-04-19', bytes: 243, mobile: 180 },
-  { date: '2024-04-20', bytes: 89, mobile: 150 },
-  { date: '2024-04-21', bytes: 137, mobile: 200 },
-  { date: '2024-04-22', bytes: 224, mobile: 170 },
-  { date: '2024-04-23', bytes: 138, mobile: 230 },
-  { date: '2024-04-24', bytes: 387, mobile: 290 },
-  { date: '2024-04-25', bytes: 215, mobile: 250 },
-  { date: '2024-04-26', bytes: 75, mobile: 130 },
-  { date: '2024-04-27', bytes: 383, mobile: 420 },
-  { date: '2024-04-28', bytes: 122, mobile: 180 },
-  { date: '2024-04-29', bytes: 315, mobile: 240 },
-  { date: '2024-04-30', bytes: 454, mobile: 380 },
-  { date: '2024-05-01', bytes: 165, mobile: 220 },
-  { date: '2024-05-02', bytes: 293, mobile: 310 },
-  { date: '2024-05-03', bytes: 247, mobile: 190 },
-  { date: '2024-05-04', bytes: 385, mobile: 420 },
-  { date: '2024-05-05', bytes: 481, mobile: 390 },
-  { date: '2024-05-06', bytes: 498, mobile: 520 },
-  { date: '2024-05-07', bytes: 388, mobile: 300 },
-  { date: '2024-05-08', bytes: 149, mobile: 210 },
-  { date: '2024-05-09', bytes: 227, mobile: 180 },
-  { date: '2024-05-10', bytes: 293, mobile: 330 },
-  { date: '2024-05-11', bytes: 335, mobile: 270 },
-  { date: '2024-05-12', bytes: 197, mobile: 240 },
-  { date: '2024-05-13', bytes: 197, mobile: 160 },
-  { date: '2024-05-14', bytes: 448, mobile: 490 },
-  { date: '2024-05-15', bytes: 473, mobile: 380 },
-  { date: '2024-05-16', bytes: 338, mobile: 400 },
-  { date: '2024-05-17', bytes: 499, mobile: 420 },
-  { date: '2024-05-18', bytes: 315, mobile: 350 },
-  { date: '2024-05-19', bytes: 235, mobile: 180 },
-  { date: '2024-05-20', bytes: 177, mobile: 230 },
-  { date: '2024-05-21', bytes: 82, mobile: 140 },
-  { date: '2024-05-22', bytes: 81, mobile: 120 },
-  { date: '2024-05-23', bytes: 252, mobile: 290 },
-  { date: '2024-05-24', bytes: 294, mobile: 220 },
-  { date: '2024-05-25', bytes: 201, mobile: 250 },
-  { date: '2024-05-26', bytes: 213, mobile: 170 },
-  { date: '2024-05-27', bytes: 420, mobile: 460 },
-  { date: '2024-05-28', bytes: 233, mobile: 190 },
-  { date: '2024-05-29', bytes: 78, mobile: 130 },
-  { date: '2024-05-30', bytes: 340, mobile: 280 },
-  { date: '2024-05-31', bytes: 178, mobile: 230 },
-  { date: '2024-06-01', bytes: 178, mobile: 200 },
-  { date: '2024-06-02', bytes: 470, mobile: 410 },
-  { date: '2024-06-03', bytes: 103, mobile: 160 },
-  { date: '2024-06-04', bytes: 439, mobile: 380 },
-  { date: '2024-06-05', bytes: 88, mobile: 140 },
-  { date: '2024-06-06', bytes: 294, mobile: 250 },
-  { date: '2024-06-07', bytes: 323, mobile: 370 },
-  { date: '2024-06-08', bytes: 385, mobile: 320 },
-  { date: '2024-06-09', bytes: 438, mobile: 480 },
-  { date: '2024-06-10', bytes: 155, mobile: 200 },
-  { date: '2024-06-11', bytes: 92, mobile: 150 },
-  { date: '2024-06-12', bytes: 492, mobile: 420 },
-  { date: '2024-06-13', bytes: 81, mobile: 130 },
-  { date: '2024-06-14', bytes: 426, mobile: 380 },
-  { date: '2024-06-15', bytes: 307, mobile: 350 },
-  { date: '2024-06-16', bytes: 371, mobile: 310 },
-  { date: '2024-06-17', bytes: 475, mobile: 520 },
-  { date: '2024-06-18', bytes: 107, mobile: 170 },
-  { date: '2024-06-19', bytes: 341, mobile: 290 },
-  { date: '2024-06-20', bytes: 408, mobile: 450 },
-  { date: '2024-06-21', bytes: 169, mobile: 210 },
-  { date: '2024-06-22', bytes: 317, mobile: 270 },
-  { date: '2024-06-23', bytes: 480, mobile: 530 },
-  { date: '2024-06-24', bytes: 132, mobile: 180 },
-  { date: '2024-06-25', bytes: 141, mobile: 190 },
-  { date: '2024-06-26', bytes: 434, mobile: 380 },
-  { date: '2024-06-27', bytes: 448, mobile: 490 },
-  { date: '2024-06-28', bytes: 149, mobile: 200 },
-  { date: '2024-06-29', bytes: 103, mobile: 160 },
-  { date: '2024-06-30', bytes: 446, mobile: 400 }
-];
+const chartData = [{ date: '2024-04-01', bytes: 222, mobile: 150 }];
 
 const chartConfig = {
   views: {
@@ -128,16 +75,54 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function BarGraph() {
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [averageElo, setAverageElo] = useState(0);
+  const [totalDownload, setTotalDownload] = useState(0);
+  const [totalUpload, setTotalUpload] = useState(0);
+  const [totalTotal, setTotalTotal] = useState(0);
+  const [deviceCount, setDeviceCount] = useState(0);
+  const [chartData, setChartData] = useState(0);
+
+  useEffect(() => {
+    const updateDevices = async () => {
+      try {
+        const newDevices = await fetchDevices();
+        const mostRecentDevices = newDevices[newDevices.length - 1]; // Get the most recent array
+
+        setDevices(mostRecentDevices);
+
+        const { totalElo, totalDownload, totalUpload, deviceCount } =
+          mostRecentDevices.reduce(
+            (acc, device) => {
+              acc.totalElo += 1; // TODO: fix this
+              acc.totalDownload += Number(device.data_in);
+              acc.totalUpload += Number(device.data_out);
+              acc.deviceCount += 1;
+              return acc;
+            },
+            { totalElo: 0, totalDownload: 0, totalUpload: 0, deviceCount: 0 }
+          );
+
+        console.log('here', totalDownload);
+
+        setAverageElo(totalElo / deviceCount);
+        setTotalDownload(totalDownload);
+        setTotalUpload(totalUpload);
+        setTotalTotal(totalDownload + totalUpload);
+        setDeviceCount(deviceCount);
+      } catch (error) {
+        console.error('Failed to fetch devices:', error);
+      }
+    };
+
+    updateDevices();
+    const interval = setInterval(updateDevices, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const [activeChart, setActiveChart] =
     React.useState<keyof typeof chartConfig>('bytes');
-
-  const total = React.useMemo(
-    () => ({
-      bytes: chartData.reduce((acc, curr) => acc + curr.bytes, 0),
-      mobile: chartData.reduce((acc, curr) => acc + curr.mobile, 0)
-    }),
-    []
-  );
 
   return (
     <Card>
@@ -162,7 +147,7 @@ export function BarGraph() {
                   {chartConfig[chart].label}
                 </span>
                 <span className="text-lg font-bold leading-none sm:text-3xl">
-                  {total[key as keyof typeof total].toLocaleString()}
+                  {totalTotal.toLocaleString()}
                 </span>
               </button>
             );
@@ -191,9 +176,10 @@ export function BarGraph() {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value);
-                return date.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric'
+                return date.toLocaleTimeString('en-GB', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
                 });
               }}
             />
@@ -203,11 +189,11 @@ export function BarGraph() {
                   className="w-[150px]"
                   nameKey="views"
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    });
+                    return new Date(value).toLocaleTimeString('en-GB', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit'
+                    }); // Convert to Unix time
                   }}
                 />
               }

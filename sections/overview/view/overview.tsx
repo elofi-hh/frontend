@@ -24,13 +24,14 @@ interface Device {
   elo: string;
 }
 
-const endpoint = 'https://your-api-endpoint.com/devices'; // Replace with your actual endpoint
+const endpoint = 'http://192.168.2.1:8080'; // Replace with your actual endpoint
 
 const fetchDevices = async (): Promise<Device[]> => {
-  const response = await fetch(endpoint);
+  const response = await fetch(endpoint, { mode: 'no-cors' });
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }
+
   return response.json();
 };
 
@@ -87,7 +88,7 @@ export default function OverViewPage() {
             Hi, Welcome back 👋
           </h2>
           <div className="hidden items-center space-x-2 md:flex">
-            <span className="font-whyfi text-2xl">WhyFi Admin Dashboard</span>
+            <span className="font-EloFi text-2xl">EloFi Admin Dashboard</span>
           </div>
         </div>
         <Tabs defaultValue="overview" className="space-y-4">

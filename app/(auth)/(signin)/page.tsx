@@ -2,7 +2,7 @@ import { OverViewPageView } from '@/sections/overview/view';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'WhyFi Dashboard',
+  title: 'EloFi Dashboard',
   description: 'Dashboard for application.'
 };
 

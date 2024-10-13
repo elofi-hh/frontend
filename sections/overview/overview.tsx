@@ -17,17 +17,31 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-// Fetch onboarding status
+import { getEloRanking } from './web3.js';
+interface Device {
+  id: number;
+  interface: string;
+  mac: string;
+  ip: string;
+  data_in: number;
+  data_out: number;
+  data_total: number;
+  first_date: number;
+  last_date: number;
+  elo: number | 'N/A';
+}
 const checkOnboarded = async (): Promise<boolean> => {
   try {
-    const response = await axios.get('/api/check_onboarded');
-    return response.data.onboarded; // Assuming your API returns { onboarded: true/false }
+    const response = await axios.get('http://192.168.2.1:8080/check_onboarded');
+    console.log(response.data);
+    console.log('hello 48ruyfliurfh');
+    return response.data;
   } catch (error) {
     console.error('Failed to check onboarding status:', error);
     return false;
   }
 };
+const endpoint = 'http://192.168.2.1:8080/';
 const formatBytes = (bytes: number, decimals = 2) => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -36,6 +50,17 @@ const formatBytes = (bytes: number, decimals = 2) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 };
+
+const fetchDevices = async (): Promise<Map<string, Device[]>> => {
+  try {
+    const response = await axios.get(endpoint);
+    return new Map(Object.entries(response.data));
+  } catch (error) {
+    console.error('Error fetching devices:', error);
+    throw new Error('Network response was not ok');
+  }
+};
+
 export default function OverViewPage() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [averageElo, setAverageElo] = useState(0);
@@ -43,18 +68,17 @@ export default function OverViewPage() {
   const [totalUpload, setTotalUpload] = useState(0);
   const [totalTotal, setTotalTotal] = useState(0);
   const [deviceCount, setDeviceCount] = useState(0);
-  const [isOnboarded, setIsOnboarded] = useState(true); // Assuming true initially
+  const [isOnboarded, setIsOnboarded] = useState(true); // Initially assuming user is onboarded
   const [showModal, setShowModal] = useState(false);
 
   const [textareaContent, setTextareaContent] = useState('');
 
-  // Onboarding check when component loads
   useEffect(() => {
     const fetchOnboardedStatus = async () => {
       const onboarded = await checkOnboarded();
+      setIsOnboarded(onboarded); // Set onboarding status
       if (!onboarded) {
-        setIsOnboarded(false);
-        setShowModal(true);
+        setShowModal(true); // Show modal if not onboarded
       }
     };
     fetchOnboardedStatus();
@@ -74,10 +98,19 @@ export default function OverViewPage() {
       alert('Message must be less than or equal to 100 characters.');
       return;
     }
+
     try {
-      // await axios.post('/api/submit', { message: trimmedMessage });
-      console.log('Message submitted:', trimmedMessage);
-      setShowModal(false); // Optionally close the modal after submission
+      const response = await axios.post('http://192.168.2.134:3000/', {
+        message: trimmedMessage
+      });
+
+      if (response.status === 200) {
+        console.log('Onboarding completed successfully.');
+        setShowModal(false); // Close modal on successful onboarding
+        setIsOnboarded(true); // Update the onboarded status
+      } else {
+        console.error('Onboarding failed. Status code:', response.status);
+      }
     } catch (error) {
       console.error('Failed to submit message:', error);
     }
@@ -156,7 +189,7 @@ export default function OverViewPage() {
       <div className="space-y-2">
         <Modal
           title="Complete Onboarding"
-          description="Please enter a brief description of your business in one sentence (100 characters max)."
+          description="Please provide the required information to proceed."
           isOpen={showModal}
           onClose={handleCloseModal}
         >

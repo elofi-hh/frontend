@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { AreaGraph } from '../area-graph';
-import { BarGraph } from '../bar-graph';
-import { PieGraph } from '../pie-graph';
+import { AreaGraph } from './area-graph';
+import { BarGraph } from './bar-graph';
+import { PieGraph } from './pie-graph';
 import { CalendarDateRangePicker } from '@/components/date-range-picker';
 import PageContainer from '@/components/layout/page-container';
-import { DeviceList } from '../device-list';
+import { DeviceList } from './device-list';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import axios from 'axios';
+import { getEloRanking } from './web3'; // Assuming this exists and gets ELO for devices
 
 interface Device {
   id: number;
@@ -27,7 +28,7 @@ interface Device {
   data_total: number;
   first_date: number;
   last_date: number;
-  elo: string;
+  elo: number | 'N/A';
 }
 
 const endpoint = 'http://192.168.2.1:8080/'; // Replace with your actual endpoint
@@ -62,23 +63,50 @@ export default function OverViewPage() {
   useEffect(() => {
     const updateDevices = async () => {
       try {
-        const newDevices = await fetchDevices();
-
-        const mostRecentKey = Array.from(newDevices.keys()).pop(); // Get the last key
+        const newDevicesMap = await fetchDevices();
+        const mostRecentKey = Array.from(newDevicesMap.keys()).pop(); // Get the last key
         const mostRecentDevices = mostRecentKey
-          ? newDevices.get(mostRecentKey)
+          ? newDevicesMap.get(mostRecentKey)
           : null; // Get the most recent array
 
         if (!mostRecentDevices) {
           return;
         }
 
-        setDevices(mostRecentDevices);
+        // Fetch ELO rankings for each device
+        const devicesWithElo = await Promise.all(
+          mostRecentDevices.map(async (device) => {
+            try {
+              const eloStr = await getEloRanking(device.mac); // Get ELO from web3.js
+              const elo = parseFloat(eloStr);
+              if (isNaN(elo)) {
+                throw new Error('Invalid ELO value');
+              }
+              return { ...device, elo };
+            } catch (error) {
+              console.error(
+                `Failed to fetch ELO for device ${device.mac}`,
+                error
+              );
+              return { ...device, elo: 'N/A' };
+            }
+          })
+        );
+
+        // Filter out devices with zero traffic
+        const filteredDevices = devicesWithElo.filter((device) => {
+          const download = Number(device.data_in);
+          const upload = Number(device.data_out);
+          const total = download + upload;
+          return total !== 0;
+        });
+
+        setDevices(filteredDevices);
 
         const { totalElo, totalDownload, totalUpload, deviceCount } =
-          mostRecentDevices.reduce(
+          filteredDevices.reduce(
             (acc, device) => {
-              acc.totalElo += 1;
+              acc.totalElo += typeof device.elo === 'number' ? device.elo : 0;
               acc.totalDownload += Number(device.data_in);
               acc.totalUpload += Number(device.data_out);
               acc.deviceCount += 1;
@@ -108,11 +136,11 @@ export default function OverViewPage() {
       <div className="space-y-2">
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-2xl font-bold tracking-tight">
-            Network Analytics
+            Network Analytics Dashboard
           </h2>
           <div className="hidden items-center space-x-2 md:flex">
             <span className="font-EloFi text-2xl">
-              🛜 EloFi Admin Dashboard
+              {/* EloFi Admin Dashboard */}
             </span>
           </div>
         </div>
@@ -124,20 +152,6 @@ export default function OverViewPage() {
                   <CardTitle className="text-sm font-medium">
                     Total Traffic
                   </CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="size-6 text-muted-foreground"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
-                    />
-                  </svg>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
@@ -150,20 +164,6 @@ export default function OverViewPage() {
                   <CardTitle className="text-sm font-medium">
                     Average Device ELO
                   </CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="size-6 text-muted-foreground"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0"
-                    />
-                  </svg>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{averageElo}</div>
@@ -174,20 +174,6 @@ export default function OverViewPage() {
                   <CardTitle className="text-sm font-medium">
                     Download
                   </CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="size-6 text-muted-foreground"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m9 12.75 3 3m0 0 3-3m-3 3v-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
@@ -198,20 +184,6 @@ export default function OverViewPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Upload</CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="size-6 text-muted-foreground"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m15 11.25-3-3m0 0-3 3m3-3v7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
@@ -220,6 +192,7 @@ export default function OverViewPage() {
                 </CardContent>
               </Card>
             </div>
+            {/* Render Graphs and Device List */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
               <div className="col-span-4">
                 <BarGraph />

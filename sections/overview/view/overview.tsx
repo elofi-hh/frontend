@@ -64,8 +64,6 @@ export default function OverViewPage() {
       try {
         const newDevices = await fetchDevices();
 
-        console.log('newDevices', newDevices);
-
         const mostRecentKey = Array.from(newDevices.keys()).pop(); // Get the last key
         const mostRecentDevices = mostRecentKey
           ? newDevices.get(mostRecentKey)

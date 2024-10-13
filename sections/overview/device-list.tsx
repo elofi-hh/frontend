@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import './DeviceList.css';
 import axios from 'axios';
+import { getEloRanking } from './web3.js'; // Import Web3 functions
 
 interface Device {
   id: number;
@@ -40,47 +41,42 @@ const formatBytes = (bytes: number, decimals = 2): string => {
 
 export function DeviceList() {
   const [devices, setDevices] = useState<Device[]>([]);
-  const [averageElo, setAverageElo] = useState(0);
-  const [totalDownload, setTotalDownload] = useState(0);
-  const [totalUpload, setTotalUpload] = useState(0);
-  const [totalTotal, setTotalTotal] = useState(0);
-  const [deviceCount, setDeviceCount] = useState(0);
+  const [loading, setLoading] = useState(true); // Loading state
 
   useEffect(() => {
     const updateDevices = async () => {
       try {
         const newDevices = await fetchDevices();
 
-        const mostRecentKey = Array.from(newDevices.keys()).pop(); // Get the last key
+        const mostRecentKey = Array.from(newDevices.keys()).pop();
         const mostRecentDevices = mostRecentKey
           ? newDevices.get(mostRecentKey)
-          : null; // Get the most recent array
+          : null;
 
         if (!mostRecentDevices) {
           return;
         }
 
-        setDevices(mostRecentDevices);
+        const devicesWithElo = await Promise.all(
+          mostRecentDevices.map(async (device) => {
+            try {
+              const elo = await getEloRanking(device.mac);
+              return { ...device, elo };
+            } catch (error) {
+              console.error(
+                `Failed to fetch ELO for device ${device.mac}`,
+                error
+              );
+              return { ...device, elo: 'N/A' };
+            }
+          })
+        );
 
-        const { totalElo, totalDownload, totalUpload, deviceCount } =
-          mostRecentDevices.reduce(
-            (acc, device) => {
-              acc.totalElo += 1; // TODO: fix this
-              acc.totalDownload += Number(device.data_in);
-              acc.totalUpload += Number(device.data_out);
-              acc.deviceCount += 1;
-              return acc;
-            },
-            { totalElo: 0, totalDownload: 0, totalUpload: 0, deviceCount: 0 }
-          );
-
-        setAverageElo(totalElo / deviceCount);
-        setTotalDownload(totalDownload);
-        setTotalUpload(totalUpload);
-        setTotalTotal(totalDownload + totalUpload);
-        setDeviceCount(deviceCount);
+        setDevices(devicesWithElo as Device[]);
+        setLoading(false);
       } catch (error) {
         console.error('Failed to fetch devices:', error);
+        setLoading(false);
       }
     };
 
@@ -92,50 +88,56 @@ export function DeviceList() {
 
   return (
     <div className="space-y-8">
-      <div className="device-list-container">
-        <div className="grid grid-cols-[auto_1fr_repeat(3,minmax(0,1fr))] items-center gap-4 py-2 font-medium">
-          <div className="col-span-2 pl-8">Device</div>
-          <div className="pl-5 text-center">Download</div>
-          <div className="text-center">Upload</div>
-          <div className="text-center">Total</div>
+      {loading ? (
+        <p>Loading devices...</p>
+      ) : (
+        <div className="device-list-container">
+          <div className="grid grid-cols-[auto_1fr_repeat(3,minmax(0,1fr))] items-center gap-4 py-2 font-medium">
+            <div className="col-span-2 pl-8">Device</div>
+            <div className="pl-5 text-center">Download</div>
+            <div className="text-center">Upload</div>
+            <div className="text-center">Total</div>
+          </div>
+          {devices.map((device) => {
+            const download = Number(device.data_in);
+            const upload = Number(device.data_out);
+            const total = download + upload;
+            return (
+              <div
+                key={device.id}
+                className="gap grid grid-cols-[auto_1fr_repeat(3,minmax(0,1fr))] items-center py-2"
+              >
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback />
+                </Avatar>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {device.mac}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    ELO: {device.elo} {/* Display ELO fetched from Web3 */}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {formatBytes(device.data_in)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {formatBytes(device.data_out)}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {formatBytes(total)}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
-        {devices.map((device) => {
-          const download = Number(device.data_in);
-          const upload = Number(device.data_out);
-          const total = download + upload;
-          return (
-            <div
-              key={device.id}
-              className="gap grid grid-cols-[auto_1fr_repeat(3,minmax(0,1fr))] items-center py-2"
-            >
-              <Avatar className="h-9 w-9">
-                <AvatarFallback />
-              </Avatar>
-              <div className="space-y-1">
-                <p className="text-sm font-medium leading-none">{device.mac}</p>
-                <p className="text-sm text-muted-foreground">
-                  ELO: {device.elo}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  {formatBytes(device.data_in)} {/* Format the download data */}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  {formatBytes(device.data_out)} {/* Format the upload data */}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  {formatBytes(total)} {/* Format the total data */}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      )}
     </div>
   );
 }

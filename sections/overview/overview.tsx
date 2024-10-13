@@ -148,7 +148,7 @@ export default function OverViewPage() {
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {/* Card 1 - Total Traffic */}
-              <Card className="transition-shadow duration-300 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:shadow-lg">
+              <Card className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Total Traffic
@@ -162,7 +162,7 @@ export default function OverViewPage() {
               </Card>
 
               {/* Card 2 - Average Device ELO */}
-              <Card className="transition-shadow duration-300 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:shadow-lg">
+              <Card className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Average Device ELO
@@ -174,7 +174,7 @@ export default function OverViewPage() {
               </Card>
 
               {/* Card 3 - Download */}
-              <Card className="transition-shadow duration-300 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:shadow-lg">
+              <Card className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Download
@@ -188,7 +188,7 @@ export default function OverViewPage() {
               </Card>
 
               {/* Card 4 - Upload */}
-              <Card className="transition-shadow duration-300 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:shadow-lg">
+              <Card className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Upload</CardTitle>
                 </CardHeader>

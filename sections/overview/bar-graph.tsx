@@ -159,21 +159,7 @@ export function BarGraph() {
         <div className="flex">
           {['bytes'].map((key) => {
             const chart = key as keyof typeof chartConfig;
-            return (
-              <button
-                key={chart}
-                data-active={activeChart === chart}
-                className="relative flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-                onClick={() => setActiveChart(chart)}
-              >
-                <span className="text-xs text-muted-foreground">
-                  {chartConfig[chart].label}
-                </span>
-                <span className="text-lg font-bold leading-none sm:text-3xl">
-                  {formatBytes(totalTotal)}
-                </span>
-              </button>
-            );
+            return <div></div>;
           })}
         </div>
       </CardHeader>

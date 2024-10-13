@@ -25,6 +25,15 @@ interface ChartDataValues {
 
 const endpoint = 'http://192.168.2.1:8080/'; // Replace with your actual endpoint
 
+const formatBytes = (bytes: number, decimals = 2) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+};
+
 const fetchDevices = async (): Promise<Map<string, Device[]>> => {
   try {
     const response = await axios.get(endpoint);
@@ -48,12 +57,13 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
+import { set } from 'date-fns';
 
 export const description = 'An interactive bar chart';
 
 const chartConfig = {
   views: {
-    label: 'Page Views'
+    label: 'Bytes'
   },
   bytes: {
     label: 'Bytes',
@@ -76,70 +86,53 @@ export function BarGraph() {
   const [totalTotal, setTotalTotal] = useState(0);
   const [deviceCount, setDeviceCount] = useState(0);
   const [chartData, setChartData] = useState<ChartDataValues[]>([]);
+  const [previousTotalBytes, setPreviousTotalBytes] = useState<number>(0);
 
   useEffect(() => {
     const updateDevices = async () => {
       try {
         const newDevices = await fetchDevices();
-
-        console.log('newDevices', newDevices);
-
-        const mostRecentKey = Array.from(newDevices.keys()).pop(); // Get the last key
+        const mostRecentKey = Array.from(newDevices.keys()).pop();
         const mostRecentDevices = mostRecentKey
           ? newDevices.get(mostRecentKey)
-          : null; // Get the most recent array
+          : null;
 
         if (!mostRecentDevices) {
           return;
         }
 
-        console.log(newDevices);
-        console.log(mostRecentDevices);
-        console.log(mostRecentDevices[0].mac);
-
         setDevices(mostRecentDevices);
 
-        const { totalElo, totalDownload, totalUpload, deviceCount } =
-          mostRecentDevices.reduce(
-            (acc, device) => {
-              acc.totalElo += 1; // TODO: fix this
-              acc.totalDownload += Number(device.data_in);
-              acc.totalUpload += Number(device.data_out);
-              acc.deviceCount += 1;
-              return acc;
-            },
-            { totalElo: 0, totalDownload: 0, totalUpload: 0, deviceCount: 0 }
+        var count = 0;
+        var previousTotalBytes2 = 0;
+        const newChartData: ChartDataValues[] = [];
+        newDevices.forEach((snapshot, index) => {
+          const totalBytes = snapshot.reduce(
+            (sum, device) => sum + device.data_in + device.data_out,
+            0
           );
 
-        console.log('here', totalDownload);
+          setTotalTotal((prevTotal) => prevTotal + totalBytes);
 
-        setAverageElo(totalElo / deviceCount);
-        setTotalDownload(totalDownload);
-        setTotalUpload(totalUpload);
-        setTotalTotal(totalDownload + totalUpload);
-        setDeviceCount(deviceCount);
+          const previousBytes =
+            previousTotalBytes2 !== 0 ? previousTotalBytes2 : totalBytes;
+          const bytesDifference = totalBytes - previousBytes;
 
-        setChartData((prevChartData) => {
-          const newChartData = [
-            ...prevChartData,
-            {
-              date: Date.now().toString(),
-              bytes:
-                totalTotal -
-                (prevChartData.length > 0
-                  ? prevChartData[prevChartData.length - 1].bytes
-                  : 0),
+          if (bytesDifference > 0) {
+            newChartData.push({
+              date: (Date.now() - (newDevices.size - count) * 5000).toString(),
+              bytes: bytesDifference,
               mobile: 0
-            }
-          ];
-
-          // Ensure the chart data does not exceed 80 bars
-          if (newChartData.length > 80) {
-            newChartData.shift(); // Remove the first element
+            });
           }
 
-          return newChartData;
+          setPreviousTotalBytes(totalBytes);
+          previousTotalBytes2 = totalBytes;
+
+          count++;
         });
+
+        setChartData(newChartData);
 
         setActiveChart('bytes');
       } catch (error) {
@@ -149,18 +142,19 @@ export function BarGraph() {
 
     updateDevices();
     const interval = setInterval(updateDevices, 5000);
-
     return () => clearInterval(interval);
   }, []);
+
+  // useEffect(() => {
+  //   console.log('chartData', chartData);
+  // }, [chartData]);
 
   return (
     <Card>
       <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
           <CardTitle>Live Bandwidth Usage</CardTitle>
-          <CardDescription>
-            Showing bandwidth usage for the last 5 minutes
-          </CardDescription>
+          <CardDescription>Showing recent bandwidth usage</CardDescription>
         </div>
         <div className="flex">
           {['bytes'].map((key) => {
@@ -176,7 +170,7 @@ export function BarGraph() {
                   {chartConfig[chart].label}
                 </span>
                 <span className="text-lg font-bold leading-none sm:text-3xl">
-                  {totalTotal.toLocaleString()}
+                  {formatBytes(totalTotal)}
                 </span>
               </button>
             );
@@ -204,7 +198,7 @@ export function BarGraph() {
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                console.log('Tick value:', value); // Debugging log
+                // console.log('Tick value:', value); // Debugging log
                 const date = new Date(Number(value)); // Ensure value is in milliseconds
                 return date.toLocaleTimeString('en-GB', {
                   hour: '2-digit',
@@ -219,7 +213,7 @@ export function BarGraph() {
                   className="w-[150px]"
                   nameKey="views"
                   labelFormatter={(value) => {
-                    console.log('Tooltip value:', value); // Debugging log
+                    // console.log('Tooltip value:', value); // Debugging log
                     const date = new Date(Number(value)); // Ensure value is in milliseconds
                     return date.toLocaleTimeString('en-GB', {
                       hour: '2-digit',

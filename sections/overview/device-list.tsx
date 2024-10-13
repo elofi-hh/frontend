@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import './DeviceList.css'; // Import the CSS file
+import './DeviceList.css';
 import axios from 'axios';
 
 interface Device {
@@ -17,7 +17,7 @@ interface Device {
   elo: string;
 }
 
-const endpoint = 'http://192.168.2.1:8080/'; // Replace with your actual endpoint
+const endpoint = 'http://192.168.2.1:8080/';
 
 const fetchDevices = async (): Promise<Map<string, Device[]>> => {
   try {
@@ -27,6 +27,15 @@ const fetchDevices = async (): Promise<Map<string, Device[]>> => {
     console.error('Error fetching devices:', error);
     throw new Error('Network response was not ok');
   }
+};
+
+const formatBytes = (bytes: number, decimals = 2): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 };
 
 export function DeviceList() {
@@ -42,8 +51,6 @@ export function DeviceList() {
       try {
         const newDevices = await fetchDevices();
 
-        console.log('newDevices', newDevices);
-
         const mostRecentKey = Array.from(newDevices.keys()).pop(); // Get the last key
         const mostRecentDevices = mostRecentKey
           ? newDevices.get(mostRecentKey)
@@ -52,10 +59,6 @@ export function DeviceList() {
         if (!mostRecentDevices) {
           return;
         }
-
-        console.log(newDevices);
-        console.log(mostRecentDevices);
-        console.log(mostRecentDevices[0].mac);
 
         setDevices(mostRecentDevices);
 
@@ -70,8 +73,6 @@ export function DeviceList() {
             },
             { totalElo: 0, totalDownload: 0, totalUpload: 0, deviceCount: 0 }
           );
-
-        console.log('here', totalDownload);
 
         setAverageElo(totalElo / deviceCount);
         setTotalDownload(totalDownload);
@@ -93,8 +94,8 @@ export function DeviceList() {
     <div className="space-y-8">
       <div className="device-list-container">
         <div className="grid grid-cols-[auto_1fr_repeat(3,minmax(0,1fr))] items-center gap-4 py-2 font-medium">
-          <div className="col-span-2">Device</div>
-          <div className="text-center">Download</div>
+          <div className="col-span-2 pl-8">Device</div>
+          <div className="pl-5 text-center">Download</div>
           <div className="text-center">Upload</div>
           <div className="text-center">Total</div>
         </div>
@@ -105,15 +106,10 @@ export function DeviceList() {
           return (
             <div
               key={device.id}
-              className="grid grid-cols-[auto_1fr_repeat(3,minmax(0,1fr))] items-center gap-4 py-2"
+              className="gap grid grid-cols-[auto_1fr_repeat(3,minmax(0,1fr))] items-center py-2"
             >
               <Avatar className="h-9 w-9">
-                <AvatarFallback>
-                  {device.mac
-                    .split(':')
-                    .map((n) => n[0])
-                    .join('')}
-                </AvatarFallback>
+                <AvatarFallback />
               </Avatar>
               <div className="space-y-1">
                 <p className="text-sm font-medium leading-none">{device.mac}</p>
@@ -123,16 +119,18 @@ export function DeviceList() {
               </div>
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
-                  {device.data_out}
+                  {formatBytes(device.data_in)} {/* Format the download data */}
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
-                  {device.data_in}
+                  {formatBytes(device.data_out)} {/* Format the upload data */}
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-sm text-muted-foreground">{total}</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatBytes(total)} {/* Format the total data */}
+                </p>
               </div>
             </div>
           );

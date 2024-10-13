@@ -200,17 +200,6 @@ export default function OverViewPage() {
               <Card className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Average Device ELO
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{averageElo}</div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-transform duration-300 hover:scale-105 hover:shadow-lg">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
                     Download
                   </CardTitle>
                 </CardHeader>
@@ -229,6 +218,16 @@ export default function OverViewPage() {
                   <div className="text-2xl font-bold">
                     {formatBytes(totalUpload)}
                   </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-transform duration-300 hover:scale-105 hover:shadow-lg">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Average Device ELO
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{averageElo}</div>
                 </CardContent>
               </Card>
             </div>

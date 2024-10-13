@@ -42,6 +42,15 @@ const fetchDevices = async (): Promise<Map<string, Device[]>> => {
   }
 };
 
+const formatBytes = (bytes: number, decimals = 2) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+};
+
 export default function OverViewPage() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [averageElo, setAverageElo] = useState(0);
@@ -66,16 +75,12 @@ export default function OverViewPage() {
           return;
         }
 
-        console.log(newDevices);
-        console.log(mostRecentDevices);
-        console.log(mostRecentDevices[0].mac);
-
         setDevices(mostRecentDevices);
 
         const { totalElo, totalDownload, totalUpload, deviceCount } =
           mostRecentDevices.reduce(
             (acc, device) => {
-              acc.totalElo += 1; // TODO: fix this
+              acc.totalElo += 1;
               acc.totalDownload += Number(device.data_in);
               acc.totalUpload += Number(device.data_out);
               acc.deviceCount += 1;
@@ -83,8 +88,6 @@ export default function OverViewPage() {
             },
             { totalElo: 0, totalDownload: 0, totalUpload: 0, deviceCount: 0 }
           );
-
-        console.log('here', totalDownload);
 
         setAverageElo(totalElo / deviceCount);
         setTotalDownload(totalDownload);
@@ -116,12 +119,6 @@ export default function OverViewPage() {
           </div>
         </div>
         <Tabs defaultValue="overview" className="space-y-4">
-          {/* <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics">
-              Analytics
-            </TabsTrigger>
-          </TabsList> */}
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -145,10 +142,9 @@ export default function OverViewPage() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalTotal} bytes</div>
-                  <p className="text-xs text-muted-foreground">
-                    +X% from last month
-                  </p>
+                  <div className="text-2xl font-bold">
+                    {formatBytes(totalTotal)}
+                  </div>
                 </CardContent>
               </Card>
               <Card>
@@ -173,9 +169,6 @@ export default function OverViewPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{averageElo}</div>
-                  <p className="text-xs text-muted-foreground">
-                    +X from last month
-                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -200,11 +193,8 @@ export default function OverViewPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {totalDownload} Bytes
+                    {formatBytes(totalDownload)}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    +X% from last month
-                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -226,10 +216,9 @@ export default function OverViewPage() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalUpload} Bytes</div>
-                  <p className="text-xs text-muted-foreground">
-                    +X% from last month
-                  </p>
+                  <div className="text-2xl font-bold">
+                    {formatBytes(totalUpload)}
+                  </div>
                 </CardContent>
               </Card>
             </div>

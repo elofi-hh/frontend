@@ -1,12 +1,14 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { AreaGraph } from './area-graph';
 import { BarGraph } from './bar-graph';
 import { PieGraph } from './pie-graph';
-import { CalendarDateRangePicker } from '@/components/date-range-picker';
+import { Modal } from '@/components/ui/modal';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import PageContainer from '@/components/layout/page-container';
 import { DeviceList } from './device-list';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -15,34 +17,17 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import axios from 'axios';
-import { getEloRanking } from './web3'; // Assuming this exists and gets ELO for devices
 
-interface Device {
-  id: number;
-  interface: string;
-  mac: string;
-  ip: string;
-  data_in: number;
-  data_out: number;
-  data_total: number;
-  first_date: number;
-  last_date: number;
-  elo: number | 'N/A';
-}
-
-const endpoint = 'http://192.168.2.1:8080/'; // Replace with your actual endpoint
-
-const fetchDevices = async (): Promise<Map<string, Device[]>> => {
+// Fetch onboarding status
+const checkOnboarded = async (): Promise<boolean> => {
   try {
-    const response = await axios.get(endpoint);
-    return new Map(Object.entries(response.data));
+    const response = await axios.get('/api/check_onboarded');
+    return response.data.onboarded; // Assuming your API returns { onboarded: true/false }
   } catch (error) {
-    console.error('Error fetching devices:', error);
-    throw new Error('Network response was not ok');
+    console.error('Failed to check onboarding status:', error);
+    return false;
   }
 };
-
 const formatBytes = (bytes: number, decimals = 2) => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -51,7 +36,6 @@ const formatBytes = (bytes: number, decimals = 2) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 };
-
 export default function OverViewPage() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [averageElo, setAverageElo] = useState(0);
@@ -59,29 +43,63 @@ export default function OverViewPage() {
   const [totalUpload, setTotalUpload] = useState(0);
   const [totalTotal, setTotalTotal] = useState(0);
   const [deviceCount, setDeviceCount] = useState(0);
+  const [isOnboarded, setIsOnboarded] = useState(true); // Assuming true initially
+  const [showModal, setShowModal] = useState(false);
+
+  const [textareaContent, setTextareaContent] = useState('');
+
+  // Onboarding check when component loads
+  useEffect(() => {
+    const fetchOnboardedStatus = async () => {
+      const onboarded = await checkOnboarded();
+      if (!onboarded) {
+        setIsOnboarded(false);
+        setShowModal(true);
+      }
+    };
+    fetchOnboardedStatus();
+  }, []);
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTextareaContent(e.target.value);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      // await axios.post('/api/submit', { message: textareaContent });
+      console.log('Message submitted:', textareaContent);
+      setShowModal(false); // Optionally close the modal after submission
+    } catch (error) {
+      console.error('Failed to submit message:', error);
+    }
+  };
 
   useEffect(() => {
+    if (!isOnboarded) return; // Skip fetching devices if the user isn't onboarded
+
     const updateDevices = async () => {
       try {
         const newDevicesMap = await fetchDevices();
-        const mostRecentKey = Array.from(newDevicesMap.keys()).pop(); // Get the last key
+        const mostRecentKey = Array.from(newDevicesMap.keys()).pop();
         const mostRecentDevices = mostRecentKey
           ? newDevicesMap.get(mostRecentKey)
-          : null; // Get the most recent array
+          : null;
 
         if (!mostRecentDevices) {
           return;
         }
 
-        // Fetch ELO rankings for each device
+        // Fetch device and ELO rankings
         const devicesWithElo = await Promise.all(
           mostRecentDevices.map(async (device) => {
             try {
-              const eloStr = await getEloRanking(device.mac); // Get ELO from web3.js
+              const eloStr = await getEloRanking(device.mac);
               const elo = parseFloat(eloStr);
-              if (isNaN(elo)) {
-                throw new Error('Invalid ELO value');
-              }
+              if (isNaN(elo)) throw new Error('Invalid ELO value');
               return { ...device, elo };
             } catch (error) {
               console.error(
@@ -93,11 +111,8 @@ export default function OverViewPage() {
           })
         );
 
-        // Filter out devices with zero traffic
         const filteredDevices = devicesWithElo.filter((device) => {
-          const download = Number(device.data_in);
-          const upload = Number(device.data_out);
-          const total = download + upload;
+          const total = Number(device.data_in) + Number(device.data_out);
           return total !== 0;
         });
 
@@ -129,11 +144,28 @@ export default function OverViewPage() {
     const interval = setInterval(updateDevices, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isOnboarded]); // Only fetch devices if the user is onboarded
 
   return (
     <PageContainer scrollable>
       <div className="space-y-2">
+        <Modal
+          title="Complete Onboarding"
+          description="Please provide the required information to proceed."
+          isOpen={showModal}
+          onClose={handleCloseModal}
+        >
+          {/* Textarea and Button for input */}
+          <Textarea
+            placeholder="Enter your message here"
+            value={textareaContent}
+            onChange={handleTextareaChange}
+          />
+          <div className="mt-4">
+            <Button onClick={handleSubmit}>Submit</Button>
+          </div>
+        </Modal>
+
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-2xl font-bold tracking-tight">
             Network Analytics Dashboard
@@ -147,7 +179,6 @@ export default function OverViewPage() {
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {/* Card 1 - Total Traffic */}
               <Card className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -161,7 +192,6 @@ export default function OverViewPage() {
                 </CardContent>
               </Card>
 
-              {/* Card 2 - Average Device ELO */}
               <Card className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -173,7 +203,6 @@ export default function OverViewPage() {
                 </CardContent>
               </Card>
 
-              {/* Card 3 - Download */}
               <Card className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -187,7 +216,6 @@ export default function OverViewPage() {
                 </CardContent>
               </Card>
 
-              {/* Card 4 - Upload */}
               <Card className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Upload</CardTitle>
@@ -200,7 +228,6 @@ export default function OverViewPage() {
               </Card>
             </div>
 
-            {/* Render Graphs and Device List with Border Hover Effect */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
               <div className="col-span-4">
                 <BarGraph />
@@ -216,12 +243,6 @@ export default function OverViewPage() {
                   <DeviceList />
                 </CardContent>
               </Card>
-              {/* <div className="col-span-4">
-                <AreaGraph />
-              </div> */}
-              {/* <div className="col-span-4 md:col-span-3 transition-shadow duration-300 hover:shadow-xl hover:border-indigo-500 hover:border-2">
-                <PieGraph />
-              </div> */}
             </div>
           </TabsContent>
         </Tabs>

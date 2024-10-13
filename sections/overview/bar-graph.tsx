@@ -91,25 +91,25 @@ export function BarGraph() {
 
         setDevices(mostRecentDevices);
 
-        const { totalElo, totalDownload, totalUpload, deviceCount } =
-          mostRecentDevices.reduce(
-            (acc, device) => {
-              acc.totalElo += 1; // TODO: fix this
-              acc.totalDownload += Number(device.data_in);
-              acc.totalUpload += Number(device.data_out);
-              acc.deviceCount += 1;
-              return acc;
-            },
-            { totalElo: 0, totalDownload: 0, totalUpload: 0, deviceCount: 0 }
-          );
+        // const { totalElo, totalDownload, totalUpload, deviceCount } =
+        //   mostRecentDevices.reduce(
+        //     (acc, device) => {
+        //       acc.totalElo += 1; // TODO: fix this
+        //       acc.totalDownload += Number(device.data_in);
+        //       acc.totalUpload += Number(device.data_out);
+        //       acc.deviceCount += 1;
+        //       return acc;
+        //     },
+        //     { totalElo: 0, totalDownload: 0, totalUpload: 0, deviceCount: 0 }
+        //   );
 
-        console.log('here', totalDownload);
+        // console.log('here', totalDownload);
 
-        setAverageElo(totalElo / deviceCount);
-        setTotalDownload(totalDownload);
-        setTotalUpload(totalUpload);
-        setTotalTotal(totalDownload + totalUpload);
-        setDeviceCount(deviceCount);
+        // setAverageElo(totalElo / deviceCount);
+        // setTotalDownload(totalDownload);
+        // setTotalUpload(totalUpload);
+        // setTotalTotal(totalDownload + totalUpload);
+        // setDeviceCount(deviceCount);
       } catch (error) {
         console.error('Failed to fetch devices:', error);
       }

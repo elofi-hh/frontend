@@ -35,7 +35,7 @@ const endpoint = 'http://192.168.2.1:8080/'; // Replace with your actual endpoin
 const fetchDevices = async (): Promise<Map<string, Device[]>> => {
   try {
     const response = await axios.get(endpoint);
-    return response.data;
+    return new Map(Object.entries(response.data));
   } catch (error) {
     console.error('Error fetching devices:', error);
     throw new Error('Network response was not ok');
@@ -57,9 +57,10 @@ export default function OverViewPage() {
 
         console.log('newDevices', newDevices);
 
-        const mostRecentDevices = newDevices.get(
-          (newDevices.size - 1).toString()
-        ); // Get the most recent array
+        const mostRecentKey = Array.from(newDevices.keys()).pop(); // Get the last key
+        const mostRecentDevices = mostRecentKey
+          ? newDevices.get(mostRecentKey)
+          : null; // Get the most recent array
 
         if (!mostRecentDevices) {
           return;
@@ -96,7 +97,7 @@ export default function OverViewPage() {
     };
 
     updateDevices();
-    const interval = setInterval(updateDevices, 5000);
+    const interval = setInterval(updateDevices, 1000);
 
     return () => clearInterval(interval);
   }, []);

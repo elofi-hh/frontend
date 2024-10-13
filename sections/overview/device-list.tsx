@@ -19,12 +19,12 @@ interface Device {
 
 const endpoint = 'http://192.168.2.1:8080/'; // Replace with your actual endpoint
 
-const fetchDevices = async (): Promise<[Device[]]> => {
+const fetchDevices = async (): Promise<Map<string, Device[]>> => {
   try {
     const response = await axios.get(endpoint);
-    return response.data;
+    return new Map(Object.entries(response.data));
   } catch (error) {
-    // console.error('Error fetching devices:', error);
+    console.error('Error fetching devices:', error);
     throw new Error('Network response was not ok');
   }
 };
@@ -41,7 +41,21 @@ export function DeviceList() {
     const updateDevices = async () => {
       try {
         const newDevices = await fetchDevices();
-        const mostRecentDevices = newDevices[newDevices.length - 1]; // Get the most recent array
+
+        console.log('newDevices', newDevices);
+
+        const mostRecentKey = Array.from(newDevices.keys()).pop(); // Get the last key
+        const mostRecentDevices = mostRecentKey
+          ? newDevices.get(mostRecentKey)
+          : null; // Get the most recent array
+
+        if (!mostRecentDevices) {
+          return;
+        }
+
+        console.log(newDevices);
+        console.log(mostRecentDevices);
+        console.log(mostRecentDevices[0].mac);
 
         setDevices(mostRecentDevices);
 

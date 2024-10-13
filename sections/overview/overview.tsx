@@ -147,7 +147,8 @@ export default function OverViewPage() {
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
+              {/* Card 1 - Total Traffic */}
+              <Card className="transition-shadow duration-300 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Total Traffic
@@ -159,7 +160,9 @@ export default function OverViewPage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+
+              {/* Card 2 - Average Device ELO */}
+              <Card className="transition-shadow duration-300 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Average Device ELO
@@ -169,7 +172,9 @@ export default function OverViewPage() {
                   <div className="text-2xl font-bold">{averageElo}</div>
                 </CardContent>
               </Card>
-              <Card>
+
+              {/* Card 3 - Download */}
+              <Card className="transition-shadow duration-300 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Download
@@ -181,7 +186,9 @@ export default function OverViewPage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+
+              {/* Card 4 - Upload */}
+              <Card className="transition-shadow duration-300 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:shadow-lg">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Upload</CardTitle>
                 </CardHeader>
@@ -192,12 +199,13 @@ export default function OverViewPage() {
                 </CardContent>
               </Card>
             </div>
-            {/* Render Graphs and Device List */}
+
+            {/* Render Graphs and Device List with Border Hover Effect */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
               <div className="col-span-4">
                 <BarGraph />
               </div>
-              <Card className="col-span-4 md:col-span-3">
+              <Card className="col-span-4 transition-shadow duration-300 hover:border-2 hover:border-indigo-500 hover:shadow-xl md:col-span-3">
                 <CardHeader>
                   <CardTitle>Device List</CardTitle>
                   <CardDescription>
@@ -208,12 +216,12 @@ export default function OverViewPage() {
                   <DeviceList />
                 </CardContent>
               </Card>
-              <div className="col-span-4">
+              {/* <div className="col-span-4">
                 <AreaGraph />
-              </div>
-              <div className="col-span-4 md:col-span-3">
+              </div> */}
+              {/* <div className="col-span-4 md:col-span-3 transition-shadow duration-300 hover:shadow-xl hover:border-indigo-500 hover:border-2">
                 <PieGraph />
-              </div>
+              </div> */}
             </div>
           </TabsContent>
         </Tabs>

@@ -92,67 +92,51 @@ export function DeviceList() {
   return (
     <div className="space-y-8">
       <div className="device-list-container">
-        <div className="flex items-center py-2">
-          <div className="ml-auto flex space-x-8">
-            <div className="text-center">
-              <p className="text-sm font-medium">Download</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-medium">Upload</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-medium">Total</p>
-            </div>
-          </div>
+        <div className="grid grid-cols-[auto_1fr_repeat(3,minmax(0,1fr))] items-center gap-4 py-2 font-medium">
+          <div className="col-span-2">Device</div>
+          <div className="text-center">Download</div>
+          <div className="text-center">Upload</div>
+          <div className="text-center">Total</div>
         </div>
-        {/* {devices.map((device) => {
+        {devices.map((device) => {
           const download = Number(device.data_in);
           const upload = Number(device.data_out);
           const total = download + upload;
           return (
-            <div key={device.id} className="flex items-center py-2">
+            <div
+              key={device.id}
+              className="grid grid-cols-[auto_1fr_repeat(3,minmax(0,1fr))] items-center gap-4 py-2"
+            >
               <Avatar className="h-9 w-9">
                 <AvatarFallback>
                   {device.mac
-                    .split(' ')
+                    .split(':')
                     .map((n) => n[0])
                     .join('')}
                 </AvatarFallback>
               </Avatar>
-              <div className="ml-4 space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {device.mac}
-                </p>
+              <div className="space-y-1">
+                <p className="text-sm font-medium leading-none">{device.mac}</p>
                 <p className="text-sm text-muted-foreground">
                   ELO: {device.elo}
                 </p>
               </div>
-              <div className="ml-auto flex space-x-12">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">
-                    {device.data_out}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">
-                    {device.data_in}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">{total}</p>
-                </div>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  {device.data_out}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  {device.data_in}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">{total}</p>
               </div>
             </div>
           );
-        })} */}
-        <div className="flex items-center py-2">
-          <div className="ml-auto flex space-x-8">
-            <div className="text-center">
-              <p className="text-sm font-medium">Average ELO</p>
-              {/* <p className="text-sm">{averageElo.toFixed(0)}</p> */}
-            </div>
-          </div>
-        </div>
+        })}
       </div>
     </div>
   );

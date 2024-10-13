@@ -108,7 +108,7 @@ export default function OverViewPage() {
       <div className="space-y-2">
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-2xl font-bold tracking-tight">
-            Hi, Welcome back 👋
+            Network Analytics
           </h2>
           <div className="hidden items-center space-x-2 md:flex">
             <span className="font-EloFi text-2xl">
@@ -228,7 +228,7 @@ export default function OverViewPage() {
                 <CardHeader>
                   <CardTitle>Device List</CardTitle>
                   <CardDescription>
-                    There are {deviceCount} device(s) currently connected.
+                    {/* There are {deviceCount} device(s) currently connected. */}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

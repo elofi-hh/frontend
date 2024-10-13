@@ -1,7 +1,7 @@
 /* DeviceList.css */
 
 .device-list-container {
-    max-height: 400px; /* Set the desired height */
-    overflow-y: auto;  /* Enable vertical scrolling */
-    padding-right: 10px; /* Optional: Add padding to avoid scrollbar overlap */
-  }
+  max-height: 400px; /* Set the desired height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  padding-right: 10px; /* Optional: Add padding to avoid scrollbar overlap */
+}

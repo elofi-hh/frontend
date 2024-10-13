@@ -69,9 +69,14 @@ export default function OverViewPage() {
   };
 
   const handleSubmit = async () => {
+    const trimmedMessage = textareaContent.trim();
+    if (trimmedMessage.length > 100) {
+      alert('Message must be less than or equal to 100 characters.');
+      return;
+    }
     try {
-      // await axios.post('/api/submit', { message: textareaContent });
-      console.log('Message submitted:', textareaContent);
+      // await axios.post('/api/submit', { message: trimmedMessage });
+      console.log('Message submitted:', trimmedMessage);
       setShowModal(false); // Optionally close the modal after submission
     } catch (error) {
       console.error('Failed to submit message:', error);
@@ -151,7 +156,7 @@ export default function OverViewPage() {
       <div className="space-y-2">
         <Modal
           title="Complete Onboarding"
-          description="Please provide the required information to proceed."
+          description="Please enter a brief description of your business in one sentence (100 characters max)."
           isOpen={showModal}
           onClose={handleCloseModal}
         >
